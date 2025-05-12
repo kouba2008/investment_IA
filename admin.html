@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>لوحة تحكم الإدارة</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: #121212;
+      color: white;
+      padding-top: 60px;
+      padding-bottom: 80px;
+    }
+
+    .header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: #1f1f1f;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+
+    .header h2 {
+      color: #00ffaa;
+      font-size: 20px;
+      margin: 0;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background: #1f1f1f;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #aaa;
+      font-size: 12px;
+      transition: transform 0.2s ease, color 0.3s;
+      cursor: pointer;
+    }
+
+    .nav-item:hover {
+      transform: scale(1.1);
+      color: #00ffaa;
+    }
+
+    .nav-item i {
+      font-size: 22px;
+      margin-bottom: 4px;
+      color: #00ffaa;
+    }
+
+    .plan {
+      background: #2a2a2a;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .plan h3 {
+      color: #00ffaa;
+      margin-bottom: 10px;
+    }
+
+    .action-buttons {
+      display: flex;
+      justify-content: space-around;
+      gap: 10px;
+    }
+
+    .action-buttons button {
+      background-color: #00ffaa;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      color: black;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    
+    .action-buttons button:hover {
+      background-color: #00dd99;
+    }
+
+    .requests-container {
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h2>لوحة تحكم الإدارة</h2>
+    <div style="color: #ccc;" id="admin-name"></div>
+  </div>
+
+  <!-- عرض بيانات المستخدمين -->
+  <div id="users-container" class="requests-container">
+    <h3>بيانات المستخدمين</h3>
+    <!-- سيتم تحميل بيانات المستخدمين هنا -->
+  </div>
+
+  <!-- عرض طلبات السحب -->
+  <div id="withdrawal-requests" class="requests-container">
+    <h3>طلبات السحب</h3>
+    <!-- سيتم تحميل طلبات السحب هنا -->
+  </div>
+
+  <!-- عرض طلبات الإيداع -->
+  <div id="deposit-requests" class="requests-container">
+    <h3>طلبات الإيداع</h3>
+    <!-- سيتم تحميل طلبات الإيداع هنا -->
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="window.location.href='index.html'">
+      <i class="bi bi-house-door-fill"></i>
+      <span>الرئيسية</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='admin.html'">
+      <i class="bi bi-person-circle"></i>
+      <span>الإدارة</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='logout.html'">
+      <i class="bi bi-box-arrow-right"></i>
+      <span>تسجيل الخروج</span>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-auth.js";
+    import { getFirestore, collection, doc, getDoc, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAkv4KnejlVxlJaKujAKqw2-Zg6b-5x5rs",
+      authDomain: "investment-website-66d8d.firebaseapp.com",
+      projectId: "investment-website-66d8d",
+      storageBucket: "investment-website-66d8d.appspot.com",
+      messagingSenderId: "598565916831",
+      appId: "1:598565916831:web:9f9f2e2f87639638f5d2aa"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentAdmin;
+
+    // التحقق من تسجيل الدخول
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentAdmin = user;
+        document.getElementById("admin-name").innerText = `مرحبًا، ${user.email}`;
+        loadUsers();
+        loadDepositRequests();
+        loadWithdrawalRequests();
+      } else {
+        window.location.href = "login.html"; // التوجيه إلى صفحة تسجيل الدخول إذا لم يكن هناك تسجيل دخول
+      }
+    });
+
+    // تحميل بيانات المستخدمين
+    async function loadUsers() {
+      const usersContainer = document.getElementById("users-container");
+      const querySnapshot = await getDocs(collection(db, "users"));
+      
+      querySnapshot.forEach((docSnap) => {
+        const user = docSnap.data();
+        const div = document.createElement("div");
+        div.className = "plan";
+        div.innerHTML = `
+          <h3>اسم المستخدم: ${user.username}</h3>
+          <p>البريد الإلكتروني: ${user.email}</p>
+          <p>الرصيد: $${user.balance || 0}</p>
+          <p>الخطة الحالية: ${user.planName || "لا توجد خطة"}</p>
+          <div class="action-buttons">
+            <button onclick="updateBalance('${docSnap.id}')">إضافة رصيد</button>
+            <button onclick="removeUser('${docSnap.id}')">حذف المستخدم</button>
+          </div>
+        `;
+        usersContainer.appendChild(div);
+      });
+    }
+
+    // تحديث رصيد المستخدم
+    window.updateBalance = async function(userId) {
+      const newBalance = prompt("أدخل المبلغ الجديد للرصيد:");
+      if (newBalance && !isNaN(newBalance) && parseFloat(newBalance) >= 0) {
+        const userRef = doc(db, "users", userId);
+        await updateDoc(userRef, {
+          balance: parseFloat(newBalance)
+        });
+        alert("تم تحديث الرصيد بنجاح");
+      } else {
+        alert("الرجاء إدخال قيمة صحيحة.");
+      }
+    };
+
+    // حذف المستخدم
+    window.removeUser = async function(userId) {
+      const confirmDelete = confirm("هل أنت متأكد من أنك تريد حذف هذا المستخدم؟");
+      if (confirmDelete) {
+        await deleteDoc(doc(db, "users", userId));
+        alert("تم حذف المستخدم بنجاح");
+        loadUsers(); // إعادة تحميل المستخدمين بعد الحذف
+      }
+    };
+
+    // تحميل طلبات السحب
+    async function loadWithdrawalRequests() {
+      const withdrawalContainer = document.getElementById("withdrawal-requests");
+      const querySnapshot = await getDocs(collection(db, "withdrawalRequests"));
+      
+      querySnapshot.forEach((docSnap) => {
+        const request = docSnap.data();
+        const div = document.createElement("div");
+        div.className = "plan";
+        div.innerHTML = `
+          <h3>المستخدم: ${request.username}</h3>
+          <p>المبلغ المطلوب: $${request.amount}</p>
+          <div class="action-buttons">
+            <button onclick="approveWithdrawal('${docSnap.id}')">قبول</button>
+            <button onclick="rejectWithdrawal('${docSnap.id}')">رفض</button>
+          </div>
+        `;
+        withdrawalContainer.appendChild(div);
+      });
+    }
+
+    // قبول طلب السحب
+    window.approveWithdrawal = async function(requestId) {
+      const requestRef = doc(db, "withdrawalRequests

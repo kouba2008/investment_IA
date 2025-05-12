@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>المهام</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: #121212;
+      color: white;
+      padding-top: 60px;
+      padding-bottom: 80px;
+    }
+
+    .header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: #1f1f1f;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 10px 20px;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+
+    .icon-button {
+      background: #2a2a2a;
+      border-radius: 50%;
+      padding: 10px;
+      margin-left: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease, background-color 0.3s;
+    }
+
+    .icon-button:hover {
+      transform: scale(1.2);
+      background-color: #333;
+    }
+
+    .icon-button:active {
+      transform: scale(0.9);
+      background-color: #555;
+    }
+
+    .icon-button i {
+      font-size: 20px;
+      color: #00ffaa;
+    }
+
+    .content {
+      text-align: center;
+      margin-top: 80px;
+    }
+
+    .card {
+      background: #2a2a2a;
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 400px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+
+    .card h3 {
+      margin-bottom: 15px;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background: #1f1f1f;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #aaa;
+      font-size: 12px;
+      transition: transform 0.2s ease, color 0.3s;
+      cursor: pointer;
+    }
+
+    .nav-item:hover {
+      transform: scale(1.1);
+      color: #00ffaa;
+    }
+
+    .nav-item i {
+      font-size: 22px;
+      margin-bottom: 4px;
+      color: #00ffaa;
+    }
+
+    @media (min-width: 768px) {
+      .nav-item span {
+        font-size: 14px;
+      }
+    }
+
+    /* Styling for task button */
+    .task-button {
+      background-color: #00ffaa;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 20px;
+      transition: background-color 0.3s;
+    }
+
+    .task-button:hover {
+      background-color: #009f77;
+    }
+
+    .task-button:active {
+      background-color: #007b63;
+    }
+
+    /* Style for alert */
+    .alert {
+      background-color: #ffcc00;
+      color: black;
+      padding: 15px;
+      border-radius: 5px;
+      margin-top: 20px;
+      font-size: 16px;
+      display: none; /* By default, hide the alert */
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- الشريط العلوي -->
+  <div class="header">
+    <div class="icon-button">
+      <i class="bi bi-bell-fill"></i>
+    </div>
+    <div class="icon-button" onclick="window.location.href='support.html'">
+  <i class="bi bi-headset"></i>
+</div>
+  </div>
+
+  <!-- المحتوى -->
+  <div class="content">
+    <h2>المهام</h2>
+
+    <!-- مهمة اليوم -->
+    <div class="card">
+      <h3>مهمة اليوم</h3>
+      <p>انقر على الزر أدناه للحصول على ربحك اليومي بناءً على الخطة التي اشتريتها.</p>
+
+      <!-- الزر الخاص بالمهمة -->
+      <button class="task-button" onclick="claimReward()">تحصيل المكافأة اليومية</button>
+
+      <!-- تنبيه التحذير -->
+      <div id="alert" class="alert"></div>
+
+    </div>
+  </div>
+
+ <!-- الشريط السفلي -->
+<div class="bottom-nav">
+  <div class="nav-item" onclick="window.location.href='index.html'">
+    <i class="bi bi-house-door-fill"></i>
+    <span>الرئيسية</span>
+  </div>
+  <div class="nav-item" onclick="window.location.href='tasks.html'">
+    <i class="bi bi-list-task"></i>
+    <span>المهام</span>
+  </div>
+  <div class="nav-item" onclick="window.location.href='plans.html'">
+    <i class="bi bi-bar-chart-fill"></i>
+    <span>الخطط</span>
+  </div>
+  <div class="nav-item" onclick="window.location.href='referral.html'">
+    <i class="bi bi-share-fill"></i>
+    <span>الإحالة</span>
+  </div>
+  <div class="nav-item" onclick="window.location.href='profile.html'">
+    <i class="bi bi-person-circle"></i>
+    <span>بروفايلي</span>
+  </div>
+</div>
+  <script>
+    // دالة تحصيل المكافأة اليومية
+    function claimReward() {
+      // هنا نقوم بالتحقق مما إذا كان المستخدم قد اشترى خطة أم لا
+      var hasPlan = true; // هذه القيمة يمكن ربطها بأي طريقة للتحقق من الخطة
+      var dailyReward = 50; // ربح اليوم بناءً على الخطة التي اشتراها المستخدم (مثال)
+      var alertElement = document.getElementById('alert');
+
+      if (hasPlan) {
+        // إذا كان قد اشترى خطة
+        alertElement.style.display = 'block';
+        alertElement.textContent = 'تم إضافة لك مبلغ ربح اليومي: ' + dailyReward + '$ إلى محفظتك.';
+      } else {
+        // إذا لم يكن قد اشترى خطة
+        alertElement.style.display = 'block';
+        alertElement.textContent = 'تم إضافة لك 0$ إلى محفظتك لأنك لم تشترِ خطة.';
+      }
+
+      // هنا يمكن إضافة أي عملية أخرى إذا أردت، مثل إعادة تحديث الصفحة أو إضافة أشياء أخرى
+    }
+  </script>
+
+</body>
+</html>

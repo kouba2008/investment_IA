@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>عملية الإيداع</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: linear-gradient(160deg, #141e30, #243b55);
+      color: #fff;
+      padding: 30px 20px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #00ffc3;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    select, input[type="email"] {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+
+    input[type="file"] {
+      color: #fff;
+    }
+
+    .address-box {
+      background: rgba(255,255,255,0.05);
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 15px;
+      margin-top: 10px;
+      word-break: break-word;
+      color: #00ffc3;
+    }
+
+    .address-box button {
+      margin-top: 10px;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 6px;
+      background: #00ffc3;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button.submit-btn {
+      width: 100%;
+      padding: 12px;
+      background-color: #00ffc3;
+      color: #000;
+      font-weight: bold;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: 0.3s;
+    }
+
+    button.submit-btn:hover {
+      background-color: #00cfa3;
+    }
+
+    .alert {
+      background-color: #4CAF50;
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      display: none;
+      font-size: 18px;
+    }
+
+    #copyMsg {
+      display: none;
+      margin-top: 10px;
+      color: #00ffc3;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>عملية الإيداع</h2>
+
+  <div class="form-group">
+    <label for="network">اختر الشبكة</label>
+    <select id="network" onchange="showAddress()">
+      <option value="">-- اختر --</option>
+      <option value="bep20">BEP20</option>
+      <option value="trc20">TRC20</option>
+      <option value="aptos">APTOS</option>
+    </select>
+
+    <div class="address-box" id="walletContainer" style="display:none;">
+      <span id="walletAddress"></span>
+      <button onclick="copyAddress()">نسخ العنوان</button>
+    </div>
+    <div id="copyMsg">تم نسخ العنوان!</div>
+  </div>
+
+  <div class="form-group">
+    <label for="email">البريد الإلكتروني</label>
+    <input type="email" id="email" placeholder="example@email.com" />
+  </div>
+
+  <div class="form-group">
+    <label for="proof">إثبات التحويل (صورة)</label>
+    <input type="file" id="proof" accept="image/*" />
+  </div>
+
+  <button class="submit-btn" onclick="submitDeposit()">إرسال الإيداع</button>
+
+  <!-- تحذير عملية الإيداع -->
+  <div class="alert" id="alertMsg">سيتم تأكيد معلوماتك قريباً!</div>
+
+  <!-- Firebase (Modular SDK) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAkv4KnejlVxlJaKujAKqw2-Zg6b-5x5rs",
+      authDomain: "investment-website-66d8d.firebaseapp.com",
+      projectId: "investment-website-66d8d",
+      storageBucket: "investment-website-66d8d.appspot.com",
+      messagingSenderId: "598565916831",
+      appId: "1:598565916831:web:9f9f2e2f87639638f5d2aa"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    const addresses = {
+      bep20: "0xfde8b1a5baa0dae284597dc992691ec138d66451",
+      trc20: "TNiiH28EgydgtjiKKiY8is4EpebZXRhH5J",
+      aptos: "0x5cf8c34f292d3c060cd5bbc0ef0e70d1178f790dc4c1d49c3f3e600866ed82c2"
+    };
+
+    window.showAddress = function () {
+      const net = document.getElementById("network").value;
+      const container = document.getElementById("walletContainer");
+      const box = document.getElementById("walletAddress");
+      const copyMsg = document.getElementById("copyMsg");
+
+      if (net) {
+        box.textContent = addresses[net];
+        container.style.display = "block";
+        copyMsg.style.display = "none";
+      } else {
+        container.style.display = "none";
+        box.textContent = "";
+      }
+    }
+
+    window.copyAddress = function () {
+      const text = document.getElementById("walletAddress").textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const msg = document.getElementById("copyMsg");
+        msg.style.display = "block";
+        setTimeout(() => {
+          msg.style.display = "none";
+        }, 2000);
+      });
+    }
+
+    window.submitDeposit = async function () {
+      const email = document.getElementById("email").value.trim();
+      const network = document.getElementById("network").value;
+      const file = document.getElementById("proof").files[0];
+
+      if (!email || !network || !file) {
+        alert("يرجى ملء جميع الحقول واختيار صورة.");
+        return;
+      }
+
+      const alertMsg = document.getElementById("alertMsg");
+      alertMsg.style.display = "block";
+
+      setTimeout(() => {
+        alertMsg.style.display = "none";
+        window.location.href = "profile.html";
+      }, 5000);
+
+      const filePath = `deposits/${Date.now()}_${file.name}`;
+      const fileRef = ref(storage, filePath);
+      await uploadBytes(fileRef, file);
+      const proofURL = await getDownloadURL(fileRef);
+
+      await addDoc(collection(db, "deposits"), {
+        email,
+        network,
+        address: addresses[network],
+        proof: proofURL,
+        timestamp: serverTimestamp()
+      });
+
+      // مسح البيانات
+      document.getElementById("email").value = "";
+      document.getElementById("network").value = "";
+      document.getElementById("walletContainer").style.display = "none";
+      document.getElementById("walletAddress").textContent = "";
+      document.getElementById("proof").value = "";
+      document.getElementById("copyMsg").style.display = "none";
+    }
+  </script>
+</body>
+</html>

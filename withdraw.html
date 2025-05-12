@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>سحب الأرباح</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #1e1e2f;
+      color: white;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 400px;
+      margin: auto;
+      background: #2c2c3e;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+
+    h2 {
+      text-align: center;
+      color: #00ffc3;
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 5px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: #00ffc3;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .note {
+      font-size: 14px;
+      color: #ccc;
+      margin-top: 10px;
+    }
+
+    .result {
+      margin-top: 10px;
+      color: #00ffc3;
+      font-weight: bold;
+    }
+
+    .alert {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #ffcc00;
+      color: #000;
+      border-radius: 5px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .error {
+      background-color: #ff6666;
+    }
+
+    .success {
+      background-color: #66ff66;
+    }
+
+    .confirm-alert {
+      background-color: #0066ff;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h2> الأرباح</h2>
+
+    <label>عنوان المحفظة</label>
+    <input type="text" id="wallet" placeholder="أدخل عنوان محفظتك" />
+
+    <label>المبلغ ($)</label>
+    <input type="number" id="amount" placeholder="أدخل المبلغ" oninput="calculateReceived()" />
+
+    <label>اختر الشبكة</label>
+    <select id="network" onchange="calculateReceived()">
+      <option value="">-- اختر الشبكة --</option>
+      <option value="TRC20">TRC20</option>
+      <option value="BEP20">BEP20</option>
+      <option value="APTOS">APTOS</option>
+    </select>
+
+    <div class="note" id="networkNote"></div>
+    <div class="result" id="resultText"></div>
+
+    <div class="alert" id="alertMessage" style="display:none;"></div>
+
+    <button class="btn" onclick="submitWithdraw()">ارسال السحب</button>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAkv4KnejlVxlJaKujAKqw2-Zg6b-5x5rs",
+      authDomain: "investment-website-66d8d.firebaseapp.com",
+      projectId: "investment-website-66d8d",
+      storageBucket: "investment-website-66d8d.firebasestorage.app",
+      messagingSenderId: "598565916831",
+      appId: "1:598565916831:web:9f9f2e2f87639638f5d2aa"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    function calculateReceived() {
+      const amount = parseFloat(document.getElementById("amount").value);
+      const network = document.getElementById("network").value;
+      const resultText = document.getElementById("resultText");
+      const note = document.getElementById("networkNote");
+
+      if (!network || isNaN(amount)) {
+        resultText.textContent = '';
+        note.textContent = '';
+        return;
+      }
+
+      let fee = 0;
+      let minAmount = 0;
+
+      if (network === "TRC20") {
+        fee = 2;
+        minAmount = 10;
+        note.textContent = "رسوم: 2$ - الحد الأدنى للسحب: 10$";
+      } else if (network === "BEP20") {
+        fee = 1;
+        minAmount = 2;
+        note.textContent = "رسوم: 1$ - الحد الأدنى للسحب: 2$";
+      } else if (network === "APTOS") {
+        fee = amount * 0.05;
+        minAmount = 1;
+        note.textContent = "رسوم: 5% - الحد الأدنى للسحب: 1$";
+      }
+
+      if (amount < minAmount) {
+        resultText.textContent = "المبلغ أقل من الحد الأدنى المسموح به!";
+      } else {
+        const received = amount - fee;
+        resultText.textContent = `سيتم استلام: ${received.toFixed(2)} $ بعد خصم الرسوم.`;
+      }
+    }
+
+    function submitWithdraw() {
+      const wallet = document.getElementById("wallet").value.trim();
+      const amount = parseFloat(document.getElementById("amount").value);
+      const network = document.getElementById("network").value;
+      const alertMessage = document.getElementById("alertMessage");
+
+      // Resetting alert before showing any new message
+      alertMessage.style.display = "none";
+
+      if (!wallet || isNaN(amount) || !network) {
+        alertMessage.style.display = "block";
+        alertMessage.textContent = "يرجى ملء جميع الحقول.";
+        alertMessage.classList.add("error");
+        return;
+      }
+
+      let fee = 0;
+      let minAmount = 0;
+
+      if (network === "TRC20") {
+        fee = 2;
+        minAmount = 10;
+      } else if (network === "BEP20") {
+        fee = 1;
+        minAmount = 2;
+      } else if (network === "APTOS") {
+        fee = amount * 0.05;
+        minAmount = 1;
+      }
+
+      if (amount <= fee || amount < minAmount) {
+        alertMessage.style.display = "block";
+        alertMessage.textContent = "أموالك غير كافية أو المبلغ أقل من الحد الأدنى.";
+        alertMessage.classList.add("error");
+        return;
+      }
+
+      const user = auth.currentUser;
+
+      if (user) {
+        // التحقق من الرصيد المتاح للمستخدم
+        db.collection("users").doc(user.uid).get().then(doc => {
+          if (doc.exists) {
+            const userData = doc.data();
+            const userBalance = userData.balance;
+
+            // التحقق من أن الرصيد كافي للسحب
+            if (amount + fee <= userBalance) {
+              // سيتم إجراء السحب هنا إذا كان الرصيد كافيًا
+              const confirmWithdraw = confirm("سيتم إرسال أموالك قريباً، هل تريد المتابعة؟");
+              if (!confirmWithdraw) return;
+
+              alertMessage.style.display = "block";
+              alertMessage.textContent = "تم تأكيد الإيداع. سيتم إرسال الأموال قريباً.";
+              alertMessage.classList.add("confirm-alert");
+
+              // تحديث الرصيد بعد السحب
+              const newBalance = userBalance - (amount + fee);
+
+              db.collection("users").doc(user.uid).update({
+                balance: newBalance
+              }).then(() => {
+                // إضافة بيانات السحب إلى قاعدة البيانات
+                const withdrawalData = {
+                  userId: user.uid,
+                  walletAddress: wallet,
+                  amount: amount,
+                  network: network,
+                  timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                db.collection("withdrawals").add(withdrawalData)
+                  .then(() => {
+                    setTimeout(() => {
+                      window.location.href = "profile.html";
+                    }, 5000);
+                  })
+                  .catch(error => {
+                    console.error("حدث خطأ أثناء إرسال السحب: ", error);
+                    alertMessage.style.display = "block";
+                    alertMessage.textContent = "حدث خطأ أثناء إرسال السحب.";
+                    alertMessage.classList.add("error");
+                  });
+              }).catch(error => {
+                console.error("حدث خطأ أثناء تحديث الرصيد: ", error);
+                alertMessage.style.display = "block";
+                alertMessage.textContent = "حدث خطأ أثناء تحديث الرصيد.";
+                alertMessage.classList.add("error");
+              });
+            } else {
+              alertMessage.style.display = "block";
+              alertMessage.textContent = "رصيدك غير كافٍ لإجراء السحب.";
+              alertMessage.classList.add("error");
+            }
+          } else {
+            console.log("المستخدم غير موجود في قاعدة البيانات.");
+            alertMessage.style.display = "block";
+            alertMessage.textContent = "حدث خطأ في الحصول على بيانات المستخدم.";
+            alertMessage.classList.add("error");
+          }
+        }).catch(error => {
+          console.error("خطأ في جلب بيانات المستخدم: ", error);
+          alertMessage.style.display = "block";
+          alertMessage.textContent = "حدث خطأ في جلب بيانات المستخدم.";
+          alertMessage.classList.add("error");
+        });
+      } else {
+        alertMessage.style.display = "block";
+        alertMessage.textContent = "لم تقم بتسجيل الدخول.";
+        alertMessage.classList.add("error");
+        window.location.href = "login.html";
+      }
+    }
+  </script>
+
+</body>
+</html>

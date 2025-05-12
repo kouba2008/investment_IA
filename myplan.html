@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>خطتي الاستثمارية</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: #121212;
+      color: white;
+      padding-top: 60px;
+      padding-bottom: 80px;
+    }
+
+    .header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: #1f1f1f;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+
+    .header h2 {
+      color: #00ffaa;
+      font-size: 20px;
+      margin: 0;
+    }
+
+    .plan {
+      background: #2a2a2a;
+      margin: 20px;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    .plan h3 {
+      color: #00ffaa;
+      margin-bottom: 10px;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background: #1f1f1f;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #aaa;
+      font-size: 12px;
+      transition: transform 0.2s ease, color 0.3s;
+      cursor: pointer;
+    }
+
+    .nav-item:hover {
+      transform: scale(1.1);
+      color: #00ffaa;
+    }
+
+    .nav-item i {
+      font-size: 22px;
+      margin-bottom: 4px;
+      color: #00ffaa;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h2>خطتي</h2>
+    <div style="color: #ccc;" id="user-email"></div>
+  </div>
+
+  <div id="plan-container" class="plan">
+    <!-- بيانات الخطة ستعرض هنا -->
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="window.location.href='index.html'">
+      <i class="bi bi-house-door-fill"></i>
+      <span>الرئيسية</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='plans.html'">
+      <i class="bi bi-bar-chart-fill"></i>
+      <span>الخطط</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='myplan.html'">
+      <i class="bi bi-briefcase-fill"></i>
+      <span>خطتي</span>
+    </div>
+    <div class="nav-item" onclick="window.location.href='profile.html'">
+      <i class="bi bi-person-circle"></i>
+      <span>بروفايلي</span>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      doc
+    } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAkv4KnejlVxlJaKujAKqw2-Zg6b-5x5rs",
+      authDomain: "investment-website-66d8d.firebaseapp.com",
+      projectId: "investment-website-66d8d",
+      storageBucket: "investment-website-66d8d.appspot.com",
+      messagingSenderId: "598565916831",
+      appId: "1:598565916831:web:9f9f2e2f87639638f5d2aa"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        document.getElementById("user-email").innerText = user.email;
+        const plansRef = collection(db, "users", user.uid, "purchasedPlans");
+        const querySnapshot = await getDocs(plansRef);
+        const container = document.getElementById("plan-container");
+
+        if (querySnapshot.empty) {
+          container.innerHTML = "<p>لم تقم بشراء أي خطة بعد.</p>";
+        } else {
+          querySnapshot.forEach((docSnap) => {
+            const plan = docSnap.data();
+            container.innerHTML = `
+              <h3>${plan.name}</h3>
+              <p>السعر: $${plan.price}</p>
+              <p>الربح اليومي: $${plan.dailyProfit}</p>
+              <p>المدة: ${plan.duration} أيام</p>
+              <p>تاريخ الشراء: ${new Date(plan.purchaseDate).toLocaleDateString()}</p>
+            `;
+          });
+        }
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+  </script>
+</body>
+</html>

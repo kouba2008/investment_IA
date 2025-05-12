@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تسجيل الدخول</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.16.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAkv4KnejlVxlJaKujAKqw2-Zg6b-5x5rs",
+      authDomain: "investment-website-66d8d.firebaseapp.com",
+      projectId: "investment-website-66d8d",
+      storageBucket: "investment-website-66d8d.appspot.com",
+      messagingSenderId: "598565916831",
+      appId: "1:598565916831:web:9f9f2e2f87639638f5d2aa"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    window.login = function () {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      if (!email || !password) {
+        alert("يرجى ملء البريد الإلكتروني وكلمة المرور");
+        return;
+      }
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          alert("تم تسجيل الدخول بنجاح");
+          window.location.href = "dashboard.html";
+        })
+        .catch((error) => {
+          alert("فشل تسجيل الدخول: " + error.message);
+        });
+    }
+  </script>
+  <style>
+    body { background: #121212; color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    .login-container { background: #1f1f1f; padding: 30px; border-radius: 10px; width: 100%; max-width: 400px; }
+    .form-group { margin-bottom: 15px; }
+    .form-group input { width: 100%; padding: 10px; background: #2a2a2a; border: none; border-radius: 5px; color: white; }
+    .login-button { width: 100%; padding: 12px; background: #00ffaa; color: black; border: none; border-radius: 5px; cursor: pointer; }
+    .bottom-text { text-align: center; margin-top: 20px; }
+    a { color: #00ffaa; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>تسجيل الدخول</h2>
+    <div class="form-group">
+      <label>البريد الإلكتروني</label>
+      <input type="email" id="email" placeholder="example@email.com">
+    </div>
+    <div class="form-group">
+      <label>كلمة المرور</label>
+      <input type="password" id="password" placeholder="••••••••">
+    </div>
+    <button class="login-button" onclick="login()">دخول</button>
+    <div class="bottom-text">ليس لديك حساب؟ <a href="register.html">سجل الآن</a></div>
+  </div>
+</body>
+</html>
